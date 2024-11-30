@@ -449,11 +449,12 @@ void get_commands(color_ostream &con, std::vector<std::string> &commands) {
         return;
     }
 
-    if (!Lua::SafeCall(con, L, 0, 1)) {
+    if (!Lua::SafeCall(con, L, 0, 1) || !lua_istable(L, -1)) {
         con.printerr("Failed Lua call to helpdb.get_commands.\n");
+        return;
     }
 
-    Lua::GetVector(L, commands, top + 1);
+    Lua::GetVector(L, commands, -1);
 }
 
 static bool try_autocomplete(color_ostream &con, const std::string &first, std::string &completed)
