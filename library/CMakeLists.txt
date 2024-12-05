@@ -152,6 +152,7 @@ set(MAIN_SOURCES_DARWIN
 set(MODULE_HEADERS
     include/modules/Buildings.h
     include/modules/Burrows.h
+    include/modules/Completion.h
     include/modules/Constructions.h
     include/modules/DFSDL.h
     include/modules/DFSteam.h
@@ -183,6 +184,7 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     modules/Buildings.cpp
     modules/Burrows.cpp
+    modules/Completion.cpp
     modules/Constructions.cpp
     modules/DFSDL.cpp
     modules/DFSteam.cpp

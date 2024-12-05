@@ -41,6 +41,7 @@ distribution.
 
 #include "modules/Buildings.h"
 #include "modules/Burrows.h"
+#include "modules/Completion.h"
 #include "modules/Constructions.h"
 #include "modules/Designations.h"
 #include "modules/DFSDL.h"
@@ -4170,6 +4171,16 @@ static int internal_getClipboardTextCp437Multiline(lua_State *L) {
     return 1;
 }
 
+static int internal_getCompletions(lua_State *L) {
+    color_ostream* con = Lua::GetOutput(L);
+    std::string command = lua_tostring(L, -1);
+
+    DFHack::Completion::loadCompletionDefinition(*con, command);
+
+    lua_pushnil(L);
+    return 1;
+}
+
 static const luaL_Reg dfhack_internal_funcs[] = {
     { "getPE", internal_getPE },
     { "getMD5", internal_getmd5 },
@@ -4205,6 +4216,7 @@ static const luaL_Reg dfhack_internal_funcs[] = {
     { "getPerfCounters", internal_getPerfCounters },
     { "getPreferredNumberFormat", internal_getPreferredNumberFormat },
     { "getClipboardTextCp437Multiline", internal_getClipboardTextCp437Multiline },
+    {"getCompletions", internal_getCompletions},
     { NULL, NULL }
 };
 

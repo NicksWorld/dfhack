@@ -4,6 +4,9 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dfhack-config/
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/init/
         DESTINATION "${DFHACK_DATA_DESTINATION}/init")
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/completions/
+        DESTINATION "${DFHACK_DATA_DESTINATION}/data/completions")
+
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/base_command_counts.json
         DESTINATION "${DFHACK_DATA_DESTINATION}/data")
 
