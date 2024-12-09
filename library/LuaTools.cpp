@@ -122,6 +122,8 @@ void DFHack::Lua::Push(lua_State *state, const df::coord2d &pos)
 
 void DFHack::Lua::GetVector(lua_State *state, std::vector<std::string> &pvec, int idx)
 {
+    idx = lua_absindex(state, idx);
+
     luaL_checktype(state, idx, LUA_TTABLE);
     lua_pushnil(state);   // first key
     while (lua_next(state, idx) != 0)
@@ -2063,6 +2065,8 @@ void DFHack::Lua::Core::onStateChange(color_ostream &out, int code) {
 static void run_timers(color_ostream &out, lua_State *L,
                        std::multimap<int,int> &timers, int table, int bound)
 {
+    table = lua_absindex(L, table);
+
     while (!timers.empty() && timers.begin()->first <= bound)
     {
         int id = timers.begin()->second;

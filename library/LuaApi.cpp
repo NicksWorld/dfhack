@@ -134,6 +134,8 @@ void dfhack_printerr(lua_State *S, const string &str);
 
 static df::coord2d CheckCoordXY(lua_State *state, int base, bool vararg = false)
 {
+    base = lua_absindex(state, base);
+
     df::coord2d p;
     if (vararg && lua_gettop(state) <= base)
         Lua::CheckDFAssign(state, &p, base);
@@ -149,6 +151,8 @@ static df::coord2d CheckCoordXY(lua_State *state, int base, bool vararg = false)
 
 static df::coord CheckCoordXYZ(lua_State *state, int base, bool vararg = false)
 {
+    base = lua_absindex(state, base);
+
     df::coord p;
     if (vararg && lua_gettop(state) <= base)
         Lua::CheckDFAssign(state, &p, base);
@@ -628,6 +632,8 @@ void Lua::Push(lua_State *L, const Screen::Pen &info)
 
 static Pen *check_pen_native(lua_State *L, int index)
 {
+    index = lua_absindex(L, index);
+
     lua_rawgetp(L, LUA_REGISTRYINDEX, &DFHACK_PEN_TOKEN);
 
     if (!lua_getmetatable(L, index) || !lua_rawequal(L, -1, -2))
@@ -770,6 +776,8 @@ static void make_pen_table(lua_State *L, Pen &pen)
 
 static void get_pen_mirror(lua_State *L, int idx)
 {
+    idx = lua_absindex(L, idx);
+
     lua_getuservalue(L, idx);
 
     if (lua_isnil(L, -1))
@@ -957,6 +965,8 @@ using Screen::PenArray;
 
 static PenArray *check_penarray_native(lua_State *L, int index)
 {
+    index = lua_absindex(L, index);
+
     lua_rawgetp(L, LUA_REGISTRYINDEX, &DFHACK_PENARRAY_TOKEN);
 
     if (!lua_getmetatable(L, index) || !lua_rawequal(L, -1, -2))
@@ -1066,6 +1076,8 @@ static int DFHACK_RANDOM_TOKEN = 0;
 
 static MersenneRNG *check_random_native(lua_State *L, int index)
 {
+    index = lua_absindex(L, index);
+
     lua_rawgetp(L, LUA_REGISTRYINDEX, &DFHACK_RANDOM_TOKEN);
 
     if (!lua_getmetatable(L, index) || !lua_rawequal(L, -1, -2))

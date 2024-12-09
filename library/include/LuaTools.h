@@ -420,6 +420,8 @@ namespace DFHack {namespace Lua {
     template<typename T>
     requires std::is_arithmetic_v<T>
     void GetVector(lua_State *state, std::vector<T> &pvec, int idx = 1) {
+        idx = lua_absindex(state, idx);
+
         lua_pushnil(state);   // first key
         while (lua_next(state, idx) != 0)
         {
