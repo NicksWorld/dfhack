@@ -29,6 +29,7 @@ distribution.
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <dbghelp.h>
 #include <psapi.h>
 
 #include <cstring>
@@ -428,4 +429,23 @@ int Process::memProtect(void *ptr, const int length, const int prot)
         return -1;
 
     return !VirtualProtect(ptr, length, prot_native, &old_prot);
+}
+
+std::string Process::cxxDemangle(const std::string &mangled_name, std::string *status_out) {
+    const char* mangled_cstr = mangled_name.c_str();
+
+    char demangled[MAX_SYM_NAME];
+    DWORD flags = UNDNAME_NO_FUNCTION_RETURNS | UNDNAME_NO_ACCESS_SPECIFIERS | UNDNAME_NAME_ONLY | UNDNAME_NO_ALLOCATION_MODEL;
+
+    if (*mangled_cstr == '.') {
+        // Symbol is a type, demangle as such
+        flags |= UNDNAME_NO_ARGUMENTS;
+        mangled_cstr++;
+    }
+
+    DWORD res = UnDecorateSymbolName(mangled_cstr, (char*)&demangled, MAX_SYM_NAME, flags);
+    if (res == 0) {
+        return "dummy";
+    }
+    return std::string((char*)&demangled);
 }

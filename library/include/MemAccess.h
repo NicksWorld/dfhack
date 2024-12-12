@@ -295,6 +295,9 @@ namespace DFHack
                 EXEC = 4
             };
 
+            /// demangle symbol native to the platform
+            std::string cxxDemangle(const std::string &mangled_name, std::string *status_out);
+
             uint32_t getPE() { return my_pe; }
             std::string getMD5() { return my_md5; }
 

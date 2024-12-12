@@ -3778,7 +3778,7 @@ static int internal_cxxDemangle(lua_State *L)
 {
     string mangled = luaL_checkstring(L, 1);
     string status;
-    string demangled = cxx_demangle(mangled, &status);
+    string demangled = Core::getInstance().p->cxxDemangle(mangled, &status);
     if (demangled.length())
     {
         lua_pushstring(L, demangled.c_str());
