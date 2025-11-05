@@ -64,10 +64,10 @@ struct DrawingPoint {
 };
 
 typedef std::map<int, std::map<int, DrawingPoint>> ShapeMap;
-ShapeMap arr;
+std::map<int, ShapeMap> shapes;
 
-bool has_point(int x, int y) {
-    return arr.count(x) != 0 && arr.at(x).count(y) != 0;
+bool has_point(ShapeMap& shape, int x, int y) {
+    return shape.count(x) != 0 && shape.at(x).count(y) != 0;
 };
 
 // Key tuple is N, W, E, S
@@ -158,29 +158,27 @@ void get_pen(Screen::Pen * tile_pen, int * highlight_tile,
     int x, int y, ShapeMap &arr, const std::string &type = "")
 {
     bool n = false, w = false, e = false, s = false;
-    if (has_point(x, y)) {
-        if (y == 0 || !has_point(x, y - 1)) n = true;
-        if (x == 0 || !has_point(x - 1, y)) w = true;
-        if (!has_point(x + 1, y)) e = true;  // TODO check map size
-        if (!has_point(x, y + 1)) s = true;  // TODO check map size
+    if (has_point(arr, x, y)) {
+        if (y == 0 || !has_point(arr, x, y - 1)) n = true;
+        if (x == 0 || !has_point(arr, x - 1, y)) w = true;
+        if (!has_point(arr, x + 1, y)) e = true;  // TODO check map size
+        if (!has_point(arr, x, y + 1)) s = true;  // TODO check map size
     }
 
     bool is_drag_point = type == "drag_point";
     bool is_extra = type == "extra_point";
-    bool is_in_shape = has_point(x, y);
+    bool is_in_shape = has_point(arr, x, y);
     auto mouse_pos = Gui::getMousePos();
     bool mouse_over = mouse_pos.x == x && mouse_pos.y == y;
 
     uint32_t pen_key = gen_pen_key(n, s, e, w, is_drag_point, mouse_over,
                                    is_in_shape, is_extra);
 
-    if (CURSORS_MAP.count({n, w, e, s}) > 0 && has_point(x, y)) {
+    if (CURSORS_MAP.count({n, w, e, s}) > 0 && has_point(arr, x, y)) {
         arr[x][y].cursor_coords = CURSORS_MAP.at({n, w, e, s});
     }
 
     if (PENS.find(pen_key) == PENS.end()) {
-        std::pair<int, int> cursor{-1, -1};
-
         if (type != "") {
             *tile_pen = make_pen(CURSORS_MAP.at({n, w, e, s}), is_drag_point,
                             mouse_over, is_in_shape, is_extra);
@@ -193,7 +191,7 @@ void get_pen(Screen::Pen * tile_pen, int * highlight_tile,
             PENS.emplace(pen_key,
                          make_pen(CURSORS_MAP.at({n, w, e, s}), is_drag_point,
                                   mouse_over, is_in_shape, is_extra));
-            if (type == "" && has_point(x, y)) {
+            if (type == "" && has_point(arr, x, y)) {
                 arr[x][y].penKey = pen_key;
             }
         }
@@ -203,6 +201,10 @@ void get_pen(Screen::Pen * tile_pen, int * highlight_tile,
 }
 
 static int design_load_shape(lua_State *L) {
+    if (!lua_isinteger(L, -2))
+        return 1;
+    size_t idx = lua_tointeger(L, -2);
+    ShapeMap shape;
     if (lua_istable(L, -1)) {
         lua_pushnil(L);
         while (lua_next(L, -2) != 0) {
@@ -215,7 +217,7 @@ static int design_load_shape(lua_State *L) {
                     bool value = lua_toboolean(L, -1);
 
                     if (value) {
-                        arr[x][y] = DrawingPoint();
+                        shape[x][y] = DrawingPoint();
                     }
                     lua_pop(L, 1);
                 }
@@ -224,24 +226,31 @@ static int design_load_shape(lua_State *L) {
         }
     }
 
+    shapes[idx] = shape;
     return 0;
 }
 
 static int design_clear_shape(lua_State *L) {
-    arr.clear();
-
+    if (lua_isinteger(L, -1)) {
+        int idx = lua_tointeger(L, -1);
+        if (!shapes.contains(idx))
+            return 0;
+        shapes[lua_tointeger(L, -1)].clear();
+    }
     return 0;
 }
 
 static int design_draw_shape(lua_State *L) {
-    if (arr.size() == 0) {
-        design_load_shape(L);
-    }
-
-    for (auto x : arr) {
+    if (!lua_isinteger(L, -1))
+        return false;
+    int idx = lua_tointeger(L, -1);
+    if (!shapes.contains(idx))
+        return 0;
+    ShapeMap& shape = shapes[lua_tointeger(L, -1)];
+    for (auto x : shape) {
         for (auto y : x.second) {
             Screen::Pen pen;
-            get_pen(&pen, NULL, x.first, y.first, arr);
+            get_pen(&pen, NULL, x.first, y.first, shape);
             df::coord2d pos(x.first - *window_x, y.first - *window_y);
             Screen::paintTile(pen, pos.x, pos.y, true);
         }
@@ -272,7 +281,8 @@ static int design_draw_points(lua_State *L) {
 
             Screen::Pen pen;
             int highlight_tile = 0;
-            get_pen(&pen, &highlight_tile, x, y, arr, str);
+            // TODO: This isn't functional right now, needs right index
+            get_pen(&pen, &highlight_tile, x, y, shapes[0], str);
             df::coord2d pos(x - *window_x, y - *window_y);
             Screen::paintTile(pen, pos.x, pos.y, true);
             if (is_graphics_mode && highlight_tile > 0) {
@@ -288,6 +298,7 @@ static int design_draw_points(lua_State *L) {
 }
 
 DFHACK_PLUGIN_LUA_COMMANDS{
+    DFHACK_LUA_COMMAND(design_load_shape),
     DFHACK_LUA_COMMAND(design_draw_shape),
     DFHACK_LUA_COMMAND(design_draw_points),
     DFHACK_LUA_COMMAND(design_clear_shape),
