@@ -144,11 +144,13 @@ jobs:
         if: inputs.artifact-name
         id: artifactname
         run: |
-          if test "false" = "${{ inputs.append-date-and-hash }}"; then
-            echo name=${{ inputs.artifact-name }} >> $GITHUB_OUTPUT
-          else
-            echo name=${{ inputs.artifact-name }}-$(date +%Y%m%d)-$(git rev-parse --short HEAD) >> $GITHUB_OUTPUT
-          fi
+          if (test "${{ inputs.append-date-and-hash }}" -eq "false") {
+            "name=${{ inputs.artifact-name }}" | Out-File -Append $env:GITHUB_OUTPUT
+          } else {
+            $date = Get-Date -Format "yyyMMdd"
+            $hash = git rev-parse --short HEAD
+            "name=${{ inputs.artifact-name}}-$date-$hash" | Out-File -Append $env:GITHUB_OUTPUT
+          }
       - name: Prep artifact
         if: inputs.artifact-name
         run: |
