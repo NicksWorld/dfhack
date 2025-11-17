@@ -141,7 +141,7 @@ jobs:
             $env:CMAKE_EXTRA_ARGS
       - name: Cross-compile
         env:
-          SCCACHE_CACHE_SIZE: ${{ inputs.cache-id == 'release' && '500G' || '150M' }}
+          SCCACHE_CACHE_SIZE: 500M
         run: |
           ninja install -C build
       - name: Finalize cache
@@ -171,12 +171,17 @@ jobs:
         run: |
           Get-ChildItem -Recurse -File -Path "build" -Filter *.pdb |
             Copy-Item -Destination "pdb"
+      - name: Prep artifact
+        run: |
+          cd output
+          7z a -ttar -so -an . |
+            7z a -si -tbzip2 ../${{ steps.artifactname.outputs.name }}.tar.bz2
       - name: Upload artifact
         if: inputs.artifact-name
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifactname.outputs.name }}
-          path: output
+          path: ${{ steps.artifactname.outputs.name }}.tar.bz2
       - name: Upload PDBs
         if: inputs.artifact-name && inputs.cache-id == 'release'
         uses: actions/upload-artifact@v4
