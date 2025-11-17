@@ -165,6 +165,11 @@ jobs:
             $hash = git rev-parse --short HEAD
             "name=${{ inputs.artifact-name}}-$date-$hash" | Out-File -Append $env:GITHUB_OUTPUT
           }
+      - name: Prep artifact
+        if: inputs.artifact-name
+        run: |
+          Get-ChildItem -Recurse -File -Filter *.pdb -Exclude pdb |
+            Copy-Item -Destination "pdb"
       - name: Upload artifact
         if: inputs.artifact-name
         uses: actions/upload-artifact@v4
