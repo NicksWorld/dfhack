@@ -104,22 +104,28 @@ jobs:
           ref: main
           ssh-key: ${{ secrets.DFHACK_3RDPARTY_TOKEN }}
           path: depends/steam
+      - name: Fetch ccache
+        if: inputs.platform-files
+        uses: actions/cache/restore@v4
+        with:
+          path: C:\\Users\\runneradmin\\AppData\\Local\\Mozilla\\sccache\\cache
+          key: win-msvc-${{ inputs.cache-id }}-${{ github.sha }}
+          restore-keys: |
+            win-msvc-${{ inputs.cache-id }}
+            win-msvc
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Install Build Dependencies
         run: |
           pip3 install --compile sphinx
           pip3 install six
           choco install sccache
+      - name: Check cache
+        run: |
+          sccache --show-stats
       - name: Prepare Environment
         run: |
           mkdir -p /output
           mkdir -p /pdb
-      - name: Configure sccache
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       - name: Configure DFHack
         env:
           CMAKE_EXTRA_ARGS: -DBUILD_PDBS:BOOL=${{ inputs.cache-id == 'release' }} -DDFHACK_RUN_URL='https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}' -DBUILD_LIBRARY=${{ inputs.platform-files }} -DBUILD_PLUGINS:BOOL=${{ inputs.platform-files && inputs.plugins }} -DBUILD_STONESENSE:BOOL=${{ inputs.stonesense }} -DBUILD_DOCS:BOOL=${{ inputs.docs }} -DBUILD_DOCS_NO_HTML:BOOL=${{ !inputs.html }} -DINSTALL_DATA_FILES:BOOL=${{ inputs.common-files }} -DINSTALL_SCRIPTS:BOOL=${{ inputs.common-files }} -DBUILD_DFLAUNCH:BOOL=${{ inputs.launchdf }} -DBUILD_TESTS:BOOL=${{ inputs.tests }} -DBUILD_XMLDUMP:BOOL=${{ inputs.xml-dump-type-sizes }} ${{ inputs.xml-dump-type-sizes && '-DINSTALL_XMLDUMP:BOOL=1' || '' }}
@@ -137,15 +143,17 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=sccache `
             $CMAKE_EXTRA_ARGS
       - name: Build DFHack
-        env:
-          SCCACHE_GHA_ENABLED: on
         run: |
           cmake --build build
       - name: Check cache
-        env:
-          SCCACHE_GHA_ENABLED: on
         run: |
           sccache --show-stats
+      - name: Save ccache
+        if: inputs.platform-files && !inputs.cache-readonly
+        uses: actions/cache/save@v4
+        with:
+          path: C:\\Users\\runneradmin\\AppData\\Local\\Mozilla\\sccache\\cache
+          key: win-msvc-${{ inputs.cache-id }}-${{ github.sha }}
       # - name: Format artifact name
       #   if: inputs.artifact-name
       #   id: artifactname
