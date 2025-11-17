@@ -140,33 +140,33 @@ jobs:
       - name: Build DFHack
         run: |
           cmake --build build
-      - name: Format artifact name
-        if: inputs.artifact-name
-        id: artifactname
-        run: |
-          if (test "${{ inputs.append-date-and-hash }}" -eq "false") {
-            "name=${{ inputs.artifact-name }}" | Out-File -Append $env:GITHUB_OUTPUT
-          } else {
-            $date = Get-Date -Format "yyyMMdd"
-            $hash = git rev-parse --short HEAD
-            "name=${{ inputs.artifact-name}}-$date-$hash" | Out-File -Append $env:GITHUB_OUTPUT
-          }
-      - name: Prep artifact
-        if: inputs.artifact-name
-        run: |
-          Get-ChildItem -Recurse -File -Fitler *.pdb |
-            Copy-Item -Destination "/pdb"
-          cd /output
-          tar cjf /${{ steps.artifactname.outputs.name }}.tar.bz2 .
-      - name: Upload artifact
-        if: inputs.artifact-name
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.artifactname.outputs.name }}
-          path: /${{ steps.artifactname.outputs.name }}.tar.bz2
-      - name: Upload PDBs
-        if: inputs.artifact-name && inputs.cache-id == 'release'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.artifactname.outputs.name }}_pdb
-          path: /pdb
+      # - name: Format artifact name
+      #   if: inputs.artifact-name
+      #   id: artifactname
+      #   run: |
+      #     if ("${{ inputs.append-date-and-hash }}" -eq "false") {
+      #       "name=${{ inputs.artifact-name }}" | Out-File -Append $env:GITHUB_OUTPUT
+      #     } else {
+      #       $date = Get-Date -Format "yyyMMdd"
+      #       $hash = git rev-parse --short HEAD
+      #       "name=${{ inputs.artifact-name}}-$date-$hash" | Out-File -Append $env:GITHUB_OUTPUT
+      #     }
+      # - name: Prep artifact
+      #   if: inputs.artifact-name
+      #   run: |
+      #     Get-ChildItem -Recurse -File -Filter *.pdb |
+      #       Copy-Item -Destination "/pdb"
+      #     cd /output
+      #     tar cjf /${{ steps.artifactname.outputs.name }}.tar.bz2 .
+      # - name: Upload artifact
+      #   if: inputs.artifact-name
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ steps.artifactname.outputs.name }}
+      #     path: /${{ steps.artifactname.outputs.name }}.tar.bz2
+      # - name: Upload PDBs
+      #   if: inputs.artifact-name && inputs.cache-id == 'release'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ steps.artifactname.outputs.name }}_pdb
+      #     path: /pdb
