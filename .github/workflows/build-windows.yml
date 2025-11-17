@@ -141,7 +141,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=output `
             -DCMAKE_C_COMPILER_LAUNCHER=sccache `
             -DCMAKE_CXX_COMPILER_LAUNCHER=sccache `
-            $CMAKE_EXTRA_ARGS
+            $env:CMAKE_EXTRA_ARGS
       - name: Build DFHack
         run: |
           ninja install -C build
@@ -168,7 +168,7 @@ jobs:
       - name: Prep artifact
         if: inputs.artifact-name
         run: |
-          Get-ChildItem -Recurse -File -Filter *.pdb -Exclude pdb |
+          Get-ChildItem -Recurse -File -Path "build" -Filter *.pdb -Exclude pdb |
             Copy-Item -Destination "pdb"
       - name: Upload artifact
         if: inputs.artifact-name
