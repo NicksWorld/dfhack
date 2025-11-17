@@ -124,8 +124,8 @@ jobs:
           sccache --show-stats
       - name: Prepare Environment
         run: |
-          mkdir -p C:\\output
-          mkdir -p C:\\pdb
+          mkdir -p output
+          mkdir -p pdb
       - name: Configure DFHack
         env:
           CMAKE_EXTRA_ARGS: -DBUILD_PDBS:BOOL=1 -DDFHACK_RUN_URL='https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}' -DBUILD_LIBRARY=${{ inputs.platform-files }} -DBUILD_PLUGINS:BOOL=${{ inputs.platform-files && inputs.plugins }} -DBUILD_STONESENSE:BOOL=${{ inputs.stonesense }} -DBUILD_DOCS:BOOL=${{ inputs.docs }} -DBUILD_DOCS_NO_HTML:BOOL=${{ !inputs.html }} -DINSTALL_DATA_FILES:BOOL=${{ inputs.common-files }} -DINSTALL_SCRIPTS:BOOL=${{ inputs.common-files }} -DBUILD_DFLAUNCH:BOOL=${{ inputs.launchdf }} -DBUILD_TESTS:BOOL=${{ inputs.tests }} -DBUILD_XMLDUMP:BOOL=${{ inputs.xml-dump-type-sizes }} ${{ inputs.xml-dump-type-sizes && '-DINSTALL_XMLDUMP:BOOL=1' || '' }}
@@ -138,14 +138,13 @@ jobs:
             -DDFHACK_BUILD_ARCH=64 `
             -DCMAKE_BUILD_TYPE=Release `
             -DBUILD_DOCS=1 `
-            -DCMAKE_INSTALL_PREFIX=C:\\output `
+            -DCMAKE_INSTALL_PREFIX=output `
             -DCMAKE_C_COMPILER_LAUNCHER=sccache `
             -DCMAKE_CXX_COMPILER_LAUNCHER=sccache `
             $CMAKE_EXTRA_ARGS
       - name: Build DFHack
         run: |
-          cd build
-          ninja install
+          ninja install -C build
       - name: Check cache
         run: |
           sccache --show-stats
@@ -169,7 +168,7 @@ jobs:
       - name: Prep artifact
         if: inputs.artifact-name
         run: |
-          tar -cjf "C:\\${{ steps.artifactname.outputs.name }}.tar.bz2" -C "C:\\output" .
+          tar -cjf "${{ steps.artifactname.outputs.name }}.tar.bz2" "output"
       # - name: Prep pdb
       #     Get-ChildItem -Recurse -File -Filter *.pdb -Exclude pdb |
       #     Copy-Item -Destination "C:\\pdb"
@@ -178,10 +177,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifactname.outputs.name }}
-          path: C:\\${{ steps.artifactname.outputs.name }}.tar.bz2
+          path: ${{ steps.artifactname.outputs.name }}.tar.bz2
       - name: Upload PDBs
         if: inputs.artifact-name && inputs.cache-id == 'release'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifactname.outputs.name }}_pdb
-          path: C:\\pdb
+          path: pdb
