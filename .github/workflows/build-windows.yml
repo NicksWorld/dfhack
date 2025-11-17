@@ -165,19 +165,12 @@ jobs:
             $hash = git rev-parse --short HEAD
             "name=${{ inputs.artifact-name}}-$date-$hash" | Out-File -Append $env:GITHUB_OUTPUT
           }
-      - name: Prep artifact
-        if: inputs.artifact-name
-        run: |
-          tar -cjf "${{ steps.artifactname.outputs.name }}.tar.bz2" "output"
-      # - name: Prep pdb
-      #     Get-ChildItem -Recurse -File -Filter *.pdb -Exclude pdb |
-      #     Copy-Item -Destination "C:\\pdb"
       - name: Upload artifact
         if: inputs.artifact-name
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifactname.outputs.name }}
-          path: ${{ steps.artifactname.outputs.name }}.tar.bz2
+          path: output
       - name: Upload PDBs
         if: inputs.artifact-name && inputs.cache-id == 'release'
         uses: actions/upload-artifact@v4
