@@ -151,6 +151,7 @@ void PerfCounters::reset(bool ignorePauseState) {
 void PerfCounters::incCounter(uint32_t &counter, uint32_t baseline_ms) {
     if (!ignore_pause_state && (!World::isFortressMode() || World::ReadPauseState()))
         return;
+
     counter += Core::getInstance().p->getTickCount() - baseline_ms;
 }
 
