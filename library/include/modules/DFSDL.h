@@ -3,6 +3,12 @@
 #include "Export.h"
 #include "ColorText.h"
 
+#define SDL_PROTOTYPES_ONLY
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+#include <SDL2/SDL_vulkan.h>
+#undef SDL_PROTOTYPES_ONLY
+
 #include <vector>
 
 struct SDL_Surface;
@@ -42,27 +48,14 @@ namespace DFHack::DFSDL
     void cleanup();
 
     DFHACK_EXPORT SDL_Surface* DFIMG_Load(const char* file);
-    DFHACK_EXPORT SDL_Surface* DFSDL_CreateRGBSurface(uint32_t flags, int width, int height, int depth, uint32_t Rmask, uint32_t Gmask, uint32_t Bmask, uint32_t Amask);
-    DFHACK_EXPORT SDL_Surface* DFSDL_CreateRGBSurfaceFrom(void* pixels, int width, int height, int depth, int pitch, uint32_t Rmask, uint32_t Gmask, uint32_t Bmask, uint32_t Amask);
-    DFHACK_EXPORT int DFSDL_UpperBlit(SDL_Surface* src, const SDL_Rect* srcrect, SDL_Surface* dst, SDL_Rect* dstrect);
-    DFHACK_EXPORT SDL_Surface* DFSDL_ConvertSurface(SDL_Surface* src, const SDL_PixelFormat* fmt, uint32_t flags);
-    DFHACK_EXPORT void DFSDL_FreeSurface(SDL_Surface* surface);
-    // DFHACK_EXPORT int DFSDL_SemWait(SDL_sem *sem);
-    // DFHACK_EXPORT int DFSDL_SemPost(SDL_sem *sem);
-    DFHACK_EXPORT int DFSDL_PushEvent(SDL_Event* event);
-    DFHACK_EXPORT void DFSDL_free(void* ptr);
-    DFHACK_EXPORT SDL_PixelFormat* DFSDL_AllocFormat(uint32_t pixel_format);
-    DFHACK_EXPORT SDL_Surface* DFSDL_CreateRGBSurfaceWithFormat(uint32_t flags, int width, int height, int depth, uint32_t format);
-    DFHACK_EXPORT int DFSDL_ShowSimpleMessageBox(uint32_t flags, const char* title, const char* message, SDL_Window* window);
+}
 
-    // submitted and returned text is UTF-8
-    // see wrapper functions below for cp-437 variants
-    DFHACK_EXPORT char* DFSDL_GetClipboardText();
-    DFHACK_EXPORT int DFSDL_SetClipboardText(const char* text);
-
-    DFHACK_EXPORT char* DFSDL_GetPrefPath(const char* org, const char* app);
-    DFHACK_EXPORT char* DFSDL_GetBasePath();
-
+namespace DFHack::DFSDL {
+    // Wrapper function definitions
+    #define SDL_DYNAPI_PROC(rc, fn, params, args, ret) \
+        DFHACK_EXPORT rc DF##fn params;
+    #include "SDL_dynapi_procs.h"
+    #undef SDL_DYNAPI_PROC
 }
 
 namespace DFHack

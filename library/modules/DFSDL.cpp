@@ -43,24 +43,14 @@ static const vector<string> SDL_IMAGE_LIBS {
 #endif
 };
 
+
+// Function pointer definitions
+#define SDL_DYNAPI_PROC(rc, fn, params, args, ret) \
+    static rc (*g_##fn) params = nullptr;
+#include "SDL_dynapi_procs.h"
+#undef SDL_DYNAPI_PROC
+
 SDL_Surface * (*g_IMG_Load)(const char *) = nullptr;
-SDL_Surface * (*g_SDL_CreateRGBSurface)(uint32_t, int, int, int, uint32_t, uint32_t, uint32_t, uint32_t) = nullptr;
-SDL_Surface * (*g_SDL_CreateRGBSurfaceFrom)(void *pixels, int width, int height, int depth, int pitch, uint32_t Rmask, uint32_t Gmask, uint32_t Bmask, uint32_t Amask) = nullptr;
-int (*g_SDL_UpperBlit)(SDL_Surface *, const SDL_Rect *, SDL_Surface *, SDL_Rect *) = nullptr;
-SDL_Surface * (*g_SDL_ConvertSurface)(SDL_Surface *, const SDL_PixelFormat *, uint32_t) = nullptr;
-void (*g_SDL_FreeSurface)(SDL_Surface *) = nullptr;
-// int (*g_SDL_SemWait)(DFSDL_sem *) = nullptr;
-// int (*g_SDL_SemPost)(DFSDL_sem *) = nullptr;
-int (*g_SDL_PushEvent)(SDL_Event *) = nullptr;
-SDL_bool (*g_SDL_HasClipboardText)();
-int (*g_SDL_SetClipboardText)(const char *text);
-char * (*g_SDL_GetClipboardText)();
-void (*g_SDL_free)(void *);
-SDL_PixelFormat* (*g_SDL_AllocFormat)(uint32_t pixel_format) = nullptr;
-SDL_Surface* (*g_SDL_CreateRGBSurfaceWithFormat)(uint32_t flags, int width, int height, int depth, uint32_t format) = nullptr;
-int (*g_SDL_ShowSimpleMessageBox)(uint32_t flags, const char *title, const char *message, SDL_Window *window) = nullptr;
-char* (*g_SDL_GetPrefPath)(const char* org, const char* app) = nullptr;
-char* (*g_SDL_GetBasePath)() = nullptr;
 
 bool DFSDL::init(color_ostream &out) {
     for (auto &lib_str : SDL_LIBS) {
@@ -89,24 +79,16 @@ bool DFSDL::init(color_ostream &out) {
         }
 
     bind(g_sdl_image_handle, IMG_Load);
-    bind(g_sdl_handle, SDL_CreateRGBSurface);
-    bind(g_sdl_handle, SDL_CreateRGBSurfaceFrom);
-    bind(g_sdl_handle, SDL_UpperBlit);
-    bind(g_sdl_handle, SDL_ConvertSurface);
-    bind(g_sdl_handle, SDL_FreeSurface);
-    // bind(g_sdl_handle, SDL_SemWait);
-    // bind(g_sdl_handle, SDL_SemPost);
-    bind(g_sdl_handle, SDL_PushEvent);
-    bind(g_sdl_handle, SDL_HasClipboardText);
-    bind(g_sdl_handle, SDL_SetClipboardText);
-    bind(g_sdl_handle, SDL_GetClipboardText);
-    bind(g_sdl_handle, SDL_free);
-    bind(g_sdl_handle, SDL_AllocFormat);
-    bind(g_sdl_handle, SDL_CreateRGBSurfaceWithFormat);
-    bind(g_sdl_handle, SDL_ShowSimpleMessageBox);
-    bind(g_sdl_handle, SDL_GetPrefPath);
-    bind(g_sdl_handle, SDL_GetBasePath);
 #undef bind
+
+    // Load all core SDL function pointers
+    #define SDL_DYNAPI_PROC(rc, fn, params, args, ret) \
+    g_##fn = (decltype(g_##fn))LookupPlugin(g_sdl_handle, #fn); \
+    if (!g_##fn) { \
+        out.printerr("DFHack could not find: " #fn "\n"); \
+    }
+    #include "SDL_dynapi_procs.h"
+    #undef SDL_DYNAPI_PROC
 
     DEBUG(dfsdl,out).print("sdl successfully loaded\n");
     return true;
@@ -124,77 +106,18 @@ void DFSDL::cleanup() {
     }
 }
 
+// Wrapper functions
+#define SDL_DYNAPI_PROC(rc, fn, params, args, ret) \
+    rc DFHack::DFSDL::DF##fn params { \
+        ret g_##fn args; \
+    }
+#include "SDL_dynapi_procs.h"
+#undef SDL_DYNAPI_PROC
+
 SDL_Surface * DFSDL::DFIMG_Load(const char *file) {
     return g_IMG_Load(file);
 }
 
-SDL_Surface * DFSDL::DFSDL_CreateRGBSurface(uint32_t flags, int width, int height, int depth, uint32_t Rmask, uint32_t Gmask, uint32_t Bmask, uint32_t Amask) {
-    return g_SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask);
-}
-
-SDL_Surface * DFSDL::DFSDL_CreateRGBSurfaceFrom(void *pixels, int width, int height, int depth, int pitch, uint32_t Rmask, uint32_t Gmask, uint32_t Bmask, uint32_t Amask) {
-    return g_SDL_CreateRGBSurfaceFrom(pixels, width, height, depth, pitch, Rmask, Gmask, Bmask, Amask);
-}
-
-int DFSDL::DFSDL_UpperBlit(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
-    return g_SDL_UpperBlit(src, srcrect, dst, dstrect);
-}
-
-SDL_Surface * DFSDL::DFSDL_ConvertSurface(SDL_Surface *src, const SDL_PixelFormat *fmt, uint32_t flags) {
-    return g_SDL_ConvertSurface(src, fmt, flags);
-}
-
-void DFSDL::DFSDL_FreeSurface(SDL_Surface *surface) {
-    g_SDL_FreeSurface(surface);
-}
-
-// int DFSDL::DFSDL_SemWait(DFSDL_sem *sem) {
-//     return g_SDL_SemWait(sem);
-// }
-
-// int DFSDL::DFSDL_SemPost(DFSDL_sem *sem) {
-//     return g_SDL_SemPost(sem);
-// }
-
-int DFSDL::DFSDL_PushEvent(SDL_Event *event) {
-    return g_SDL_PushEvent(event);
-}
-
-void DFSDL::DFSDL_free(void *ptr) {
-    g_SDL_free(ptr);
-}
-
-char * DFSDL::DFSDL_GetClipboardText() {
-    return g_SDL_GetClipboardText();
-}
-
-int DFSDL::DFSDL_SetClipboardText(const char *text) {
-    return g_SDL_SetClipboardText(text);
-}
-
-SDL_PixelFormat* DFSDL::DFSDL_AllocFormat(uint32_t pixel_format) {
-    return g_SDL_AllocFormat(pixel_format);
-}
-
-SDL_Surface* DFSDL::DFSDL_CreateRGBSurfaceWithFormat(uint32_t flags, int width, int height, int depth, uint32_t format) {
-    return g_SDL_CreateRGBSurfaceWithFormat(flags, width, height, depth, format);
-}
-
-char* DFSDL::DFSDL_GetPrefPath(const char* org, const char* app)
-{
-    return g_SDL_GetPrefPath(org, app);
-}
-
-char* DFSDL::DFSDL_GetBasePath()
-{
-    return g_SDL_GetBasePath();
-}
-
-int DFSDL::DFSDL_ShowSimpleMessageBox(uint32_t flags, const char *title, const char *message, SDL_Window *window) {
-    if (!g_SDL_ShowSimpleMessageBox)
-        return -1;
-    return g_SDL_ShowSimpleMessageBox(flags, title, message, window);
-}
 
 // convert tabs to spaces so they don't get converted to '?'
 static char * tabs_to_spaces(char *str) {
@@ -266,3 +189,5 @@ DFHACK_EXPORT bool DFHack::setClipboardTextCp437Multiline(string text) {
     }
     return 0 == DFHack::DFSDL::DFSDL_SetClipboardText(str.str().c_str());
 }
+
+
