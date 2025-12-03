@@ -24,6 +24,7 @@ distribution.
 
 #include "Internal.h"
 
+
 #include "Error.h"
 #include "MemAccess.h"
 #include "Core.h"
@@ -135,8 +136,8 @@ public:
 
 struct Core::Private
 {
-    std::thread iothread;
     std::thread hotkeythread;
+    std::thread iothread;
 
     bool last_autosave_request{false};
     bool last_manual_save_request{false};
