@@ -115,11 +115,13 @@ jobs:
         run: |
           mkdir output
           mkdir pdb
-      - name: Fetch ccache
+      - name: Get sccahce path
+        run: echo ("SCCACHE_DIR=" + $env:LOCALAPPDATA + "\Mozilla\sccache\cache") >> $env:GITHUB_ENV
+      - name: Fetch sccache
         if: inputs.platform-files
         uses: actions/cache/restore@v4
         with:
-          path: C:\\Users\\runneradmin\\AppData\\Local\\Mozilla\\sccache\\cache
+          path: ${{ env.SCCACHE_DIR }}
           key: win-msvc-${{ inputs.cache-id }}-${{ github.sha }}
           restore-keys: |
             win-msvc-${{ inputs.cache-id }}
@@ -158,11 +160,11 @@ jobs:
           cd build
           sccache --show-stats
           sccache --zero-stats
-      - name: Save ccache
+      - name: Save sccache
         if: inputs.platform-files && !inputs.cache-readonly
         uses: actions/cache/save@v4
         with:
-          path: C:\\Users\\runneradmin\\AppData\\Local\\Mozilla\\sccache\\cache
+          path: ${{ env.SCCACHE_DIR }}
           key: win-msvc-${{ inputs.cache-id }}-${{ github.sha }}
       - name: Format artifact name
         if: inputs.artifact-name
